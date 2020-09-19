@@ -59,25 +59,27 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
     }
     
     public PreferencePair<Option, Count> get(Option optionA, Option optionB) {
-        Integer i = getIndex(optionA);
-        Integer j = getIndex(optionB);
+        int i = getIndex(optionA);
+        int j = getIndex(optionB);
         
-        Count preferA = count.getEntry(i, j);
-        Count preferB = count.getEntry(j, i);
-        
-        return new PreferencePair<Option, Count>(optionA, optionB, preferA, preferB);
+        return get(optionA, optionB, i, j);
     }
     
     public PreferencePair<Option, Count> get(int i, int j) {
         Option optionA = getOption(i);
         Option optionB = getOption(j);
         
+        return get(optionA, optionB, i, j);
+    }
+    
+    private PreferencePair<Option, Count> get(Option optionA, Option optionB, int i, int j) {
+        
         Count preferA = count.getEntry(i, j);
         Count preferB = count.getEntry(j, i);
         
         return new PreferencePair<Option, Count>(optionA, optionB, preferA, preferB);
     }
-    
+            
     private Stream<Integer> indexStream() {
         return IntStream.range(0, order.size())
                 .mapToObj(i->i);

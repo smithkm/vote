@@ -20,6 +20,10 @@ import org.junit.jupiter.api.Test;
 public class PreferenceMatrixTest {
     
     static FieldMatrix<Fraction> matrix3x3_empty;
+    static FieldMatrix<Fraction> matrix3x4_empty;
+    static FieldMatrix<Fraction> matrix4x3_empty;
+    static FieldMatrix<Fraction> matrix4x4_empty;
+    static FieldMatrix<Fraction> matrix2x2_empty;
     static FieldMatrix<Fraction> matrix3x3_valuesOnDiagonal;
     
     static FieldMatrix<Fraction> matrix3x3_test1;
@@ -27,6 +31,10 @@ public class PreferenceMatrixTest {
     @BeforeAll
     public static void testMatrices() {
         matrix3x3_empty = MatrixUtils.createFieldMatrix(FractionField.getInstance(), 3,3);
+        matrix3x4_empty = MatrixUtils.createFieldMatrix(FractionField.getInstance(), 3,4);
+        matrix4x3_empty = MatrixUtils.createFieldMatrix(FractionField.getInstance(), 4,3);
+        matrix4x4_empty = MatrixUtils.createFieldMatrix(FractionField.getInstance(), 4,4);
+        matrix2x2_empty = MatrixUtils.createFieldMatrix(FractionField.getInstance(), 2,2);
         matrix3x3_test1 = MatrixUtils.createFieldMatrix(new Fraction[][] {
             {f(0), f(42), f(9)},
             {f(41), f(0), f(5)},
@@ -82,6 +90,26 @@ public class PreferenceMatrixTest {
         assertEquals(true, unit.isWin("C", "B"));
         assertEquals(false, unit.isWin("B", "C"));
         
+    }
+    
+    @Test
+    public void testMatrixHasVotesOnDiagonal() throws Exception {
+        var options = Arrays.asList("A","B","C");
+        assertThrows(IllegalArgumentException.class, 
+                ()->new PreferenceMatrix<>(options, matrix3x3_valuesOnDiagonal));
+    }
+    
+    @Test
+    public void testMatrixDimensionsMatchOptions() throws Exception {
+        var options = Arrays.asList("A","B","C");
+        assertThrows(IllegalArgumentException.class, 
+                ()->new PreferenceMatrix<>(options, matrix3x4_empty));
+        assertThrows(IllegalArgumentException.class, 
+                ()->new PreferenceMatrix<>(options, matrix4x3_empty));
+        assertThrows(IllegalArgumentException.class, 
+                ()->new PreferenceMatrix<>(options, matrix4x4_empty));
+        assertThrows(IllegalArgumentException.class, 
+                ()->new PreferenceMatrix<>(options, matrix2x2_empty));
     }
     
     @Test
