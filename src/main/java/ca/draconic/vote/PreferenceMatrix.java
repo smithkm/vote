@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -130,13 +131,17 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
     }
     
     public Option getOption(int i) {
-        return order.get(i);
+        try {
+            return order.get(i);
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new NoSuchElementException(i+" is not a valid index");
+        }
     }
     
     public int getIndex(Option option) {
         Integer i = index.get(option);
         if (Objects.isNull(i)) {
-            throw new IllegalArgumentException("Option "+option+" is unknown");
+            throw new NoSuchElementException("Option "+option+" is unknown");
         }
         return i;
     }
