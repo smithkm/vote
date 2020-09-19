@@ -195,8 +195,7 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
      Ballot extends Ranking<Option> & WeightedBallot<Count> > 
     FieldMatrix<Count> weightedRankedBallotMatrix(Collection<Option> options, Ballot vote, Field<Count> field) {
         FieldMatrix<Count> result = unweightedRankedBallotMatrix(options, vote, field);
-        result.scalarMultiply(vote.getWeight());
-        return result;
+        return result.scalarMultiply(vote.getWeight());
     }
     
     public static 

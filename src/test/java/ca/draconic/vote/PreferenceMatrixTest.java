@@ -5,12 +5,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import org.apache.commons.math3.fraction.Fraction;
 import org.apache.commons.math3.fraction.FractionField;
 import org.apache.commons.math3.linear.FieldMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
+import org.apache.commons.math3.util.Pair;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -35,6 +38,9 @@ public class PreferenceMatrixTest {
 
     private static Fraction f(int x) {
         return new Fraction(x);
+    }
+    private static Fraction f(int n, int d) {
+        return new Fraction(n,d);
     }
     
     @Test
@@ -99,5 +105,55 @@ public class PreferenceMatrixTest {
         assertEquals("C", unit.getOption(2));
         assertThrows(NoSuchElementException.class, ()->unit.getOption(3));
         assertThrows(NoSuchElementException.class, ()->unit.getOption(-1));
+    }
+    
+    @Test
+    public void testWeightedPreferentialTallyWithoutWeight() throws Exception {
+        var options = Arrays.asList("A","B","C");
+        final var builder = RankedBallot.builder(options, FractionField.getInstance());
+        var ballots = List.of(
+                List.of(1,2,3),
+                List.of(1,2,3),
+                List.of(1,2,3),
+                
+                List.of(1,3,2),
+                List.of(1,3,2),
+                List.of(1,3,2),
+                
+                List.of(2,1,1),
+                List.of(2,1,1)
+                ).stream()
+                .map(builder::ballot)
+                .collect(Collectors.toList());
+        var unit = PreferenceMatrix.weightedPreferential(options, ballots, FractionField.getInstance());
+        
+        assertPair("A","B", f(6), f(2), unit);
+        assertPair("A","C", f(6), f(2), unit);
+        assertPair("B","C", f(3), f(3), unit);
+    }
+    
+    @Test
+    public void testWeightedPreferentialTally() throws Exception {
+        var options = Arrays.asList("A","B","C");
+        final var builder = RankedBallot.builder(options, FractionField.getInstance());
+        var ballots = List.of(
+                new Pair<>(List.of(1,2,3), f(1)),
+                new Pair<>(List.of(1,2,3), f(2)),
+                new Pair<>(List.of(1,2,3), f(1)),
+                
+                new Pair<>(List.of(1,3,2), f(1)),
+                new Pair<>(List.of(1,3,2), f(1)),
+                new Pair<>(List.of(1,3,2), f(1)),
+                
+                new Pair<>(List.of(2,1,1), f(2)),
+                new Pair<>(List.of(2,1,1), f(1))
+                ).stream()
+                .map(p->builder.ballot(p.getFirst(), p.getSecond()))
+                .collect(Collectors.toList());
+        var unit = PreferenceMatrix.weightedPreferential(options, ballots, FractionField.getInstance());
+        
+        assertPair("A","B", f(7), f(3), unit);
+        assertPair("A","C", f(7), f(3), unit);
+        assertPair("B","C", f(4), f(3), unit);
     }
 }
