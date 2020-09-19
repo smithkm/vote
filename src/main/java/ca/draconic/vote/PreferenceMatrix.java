@@ -24,41 +24,6 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
     final Map<Option, Integer> index ;
     final FieldMatrix<Count> count;
     
-    public class PreferencePair {
-        private final Count preferA;
-        private final Count preferB;
-        private final Option optionA;
-        private final Option optionB;
-        
-        public PreferencePair(Option optionA, Option optionB, Count preferA, Count preferB) {
-            super();
-            this.preferA = preferA;
-            this.preferB = preferB;
-            this.optionA = optionA;
-            this.optionB = optionB;
-        }
-        
-        public Count getPreferA() {
-            return preferA;
-        }
-        
-        public Count getPreferB() {
-            return preferB;
-        }
-        
-        public Option getOptionA() {
-            return optionA;
-        }
-
-        public Option getOptionB() {
-            return optionB;
-        }
-
-        public Preference getPreference() {
-            return Preference.fromVotes(preferA, preferB);
-        }
-    }
-    
     public PreferenceMatrix(Collection<Option> options, Field<Count> field) {
         this(options, new Array2DRowFieldMatrix<>(field, options.size(), options.size()));
     }
@@ -93,24 +58,24 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
         return new PreferenceMatrix<>(options, new Array2DRowFieldMatrix<>(FractionField.getInstance(), converted));
     }
     
-    public PreferencePair get(Option optionA, Option optionB) {
+    public PreferencePair<Option, Count> get(Option optionA, Option optionB) {
         Integer i = getIndex(optionA);
         Integer j = getIndex(optionB);
         
         Count preferA = count.getEntry(i, j);
         Count preferB = count.getEntry(j, i);
         
-        return new PreferencePair(optionA, optionB, preferA, preferB);
+        return new PreferencePair<Option, Count>(optionA, optionB, preferA, preferB);
     }
     
-    public PreferencePair get(int i, int j) {
+    public PreferencePair<Option, Count> get(int i, int j) {
         Option optionA = getOption(i);
         Option optionB = getOption(j);
         
         Count preferA = count.getEntry(i, j);
         Count preferB = count.getEntry(j, i);
         
-        return new PreferencePair(optionA, optionB, preferA, preferB);
+        return new PreferencePair<Option, Count>(optionA, optionB, preferA, preferB);
     }
     
     private Stream<Integer> indexStream() {
@@ -118,11 +83,11 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
                 .mapToObj(i->i);
     }
     
-    public Stream<PreferencePair> stream(){
+    public Stream<PreferencePair<Option, Count>> stream(){
         return indexStream()
             .flatMap(i->indexStream()
                 .filter(j->j!=i)
-                .map(j->new PreferencePair(
+                .map(j->new PreferencePair<Option, Count>(
                     getOption(i),
                     getOption(j),
                     count.getEntry(i, j),
