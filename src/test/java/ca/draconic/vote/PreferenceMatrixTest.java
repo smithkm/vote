@@ -27,6 +27,9 @@ public class PreferenceMatrixTest {
     static FieldMatrix<Fraction> matrix3x3_valuesOnDiagonal;
     
     static FieldMatrix<Fraction> matrix3x3_test1;
+    static FieldMatrix<Fraction> matrix3x3_test2;
+    static FieldMatrix<Fraction> matrix3x3_test2_beatpath;
+    static int[][] array3x3_test1;
     
     @BeforeAll
     public static void testMatrices() {
@@ -40,8 +43,29 @@ public class PreferenceMatrixTest {
             {f(41), f(0), f(5)},
             {f(9), f(100), f(0)},
         });
+        array3x3_test1 = new int[][] {
+            {0, 42, 9},
+            {41, 0, 5},
+            {9, 100, 0},
+        };
         matrix3x3_valuesOnDiagonal = matrix3x3_test1.copy();
         matrix3x3_valuesOnDiagonal.setEntry(1, 1, Fraction.ONE);
+        
+        // Examples from the Wikipedia article https://en.wikipedia.org/wiki/Schulze_method
+        matrix3x3_test2 = MatrixUtils.createFieldMatrix(new Fraction[][] {
+            {f(0), f(20), f(26), f(30), f(22)},
+            {f(25), f(0), f(16), f(33), f(18)},
+            {f(19), f(29), f(0), f(17), f(24)},
+            {f(15), f(12), f(28), f(0), f(14)},
+            {f(23), f(27), f(21), f(31), f(0)},
+        });
+        matrix3x3_test2_beatpath = MatrixUtils.createFieldMatrix(new Fraction[][] {
+            {f(0), f(28), f(28), f(30), f(24)},
+            {f(25), f(0), f(28), f(33), f(24)},
+            {f(25), f(29), f(0), f(29), f(24)},
+            {f(25), f(28), f(28), f(0), f(24)},
+            {f(25), f(28), f(28), f(31), f(0)},
+        });
     }
 
     private static Fraction f(int x) {
@@ -73,6 +97,29 @@ public class PreferenceMatrixTest {
     public void testMatrix() throws Exception {
         var options = Arrays.asList("A","B","C");
         var unit = new PreferenceMatrix<>(options, matrix3x3_test1);
+        
+        assertPair("A","B", f(42), f(41), unit);
+        assertPair("A","C", f(9), f(9), unit);
+        assertPair("B","C", f(5), f(100), unit);
+        
+        // A beats B
+        assertEquals(true, unit.isWin("A", "B"));
+        assertEquals(false, unit.isWin("B", "A"));
+        
+        // A ties with C
+        assertEquals(false, unit.isWin("A", "C"));
+        assertEquals(false, unit.isWin("C", "A"));
+        
+        // C beats B
+        assertEquals(true, unit.isWin("C", "B"));
+        assertEquals(false, unit.isWin("B", "C"));
+        
+    }
+    
+    @Test
+    public void testFromArray() throws Exception {
+        var options = Arrays.asList("A","B","C");
+        var unit = PreferenceMatrix.fromArray(options, array3x3_test1);
         
         assertPair("A","B", f(42), f(41), unit);
         assertPair("A","C", f(9), f(9), unit);
@@ -184,4 +231,14 @@ public class PreferenceMatrixTest {
         assertPair("A","C", f(7), f(3), unit);
         assertPair("B","C", f(4), f(3), unit);
     }
+    
+    @Test
+    public void testBeatpath() throws Exception {
+        var options = Arrays.asList("A","B","C","D","E");
+        var unit = new PreferenceMatrix<>(options, matrix3x3_test2);
+        var result = unit.beatPaths();
+        
+        assertEquals(matrix3x3_test2_beatpath, result.getData());
+    }
+
 }

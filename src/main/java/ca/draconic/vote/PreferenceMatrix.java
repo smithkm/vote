@@ -1,6 +1,5 @@
 package ca.draconic.vote;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -14,9 +13,9 @@ import java.util.stream.Stream;
 import org.apache.commons.math3.Field;
 import org.apache.commons.math3.FieldElement;
 import org.apache.commons.math3.fraction.Fraction;
-import org.apache.commons.math3.fraction.FractionField;
 import org.apache.commons.math3.linear.Array2DRowFieldMatrix;
 import org.apache.commons.math3.linear.FieldMatrix;
+import org.apache.commons.math3.linear.MatrixUtils;
 
 public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Comparable<Count>> {
     
@@ -54,8 +53,8 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
             .map(row->row
                     .mapToObj(Fraction::new)
                     .toArray(Fraction[]::new))
-            .toArray(Fraction[]::new);
-        return new PreferenceMatrix<>(options, new Array2DRowFieldMatrix<>(FractionField.getInstance(), converted));
+            .toArray(Fraction[][]::new);
+        return new PreferenceMatrix<>(options, MatrixUtils.createFieldMatrix(converted));
     }
     
     public PreferencePair<Option, Count> get(Option optionA, Option optionB) {
@@ -114,7 +113,7 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
     }
     
     private Count min(Count a, Count b) {
-        return a.compareTo(b)>0 ? a : b;
+        return a.compareTo(b)<0 ? a : b;
     }
     
     private Count max(Count a, Count b) {
@@ -127,27 +126,31 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
     
     public PreferenceMatrix<Option, Count> beatPaths() {
         final int C = order.size(); 
-        var result = count.copy();
+        var result = count.createMatrix(C, C);
         
         for(int i = 0; i<C; i++) {
             for(int j = 0; j<C; j++) {
-                if(i==j) continue;
-                result.setEntry(i, j, ifBigger(result.getEntry(i,j),result.getEntry(j,i)));
+                if(i!=j) {
+                    result.setEntry(i, j, ifBigger(count.getEntry(i,j),count.getEntry(j,i)));
+                }
             }
         }
         
         for(int i = 0; i<C; i++) {
             for(int j = 0; j<C; j++) {
-                if(i==j) continue;
-                for(int k = 0; k<C; k++) {
-                    if(i==k||j==k) continue;
-                    
-                    result.setEntry(j,k, max(result.getEntry(j,k), min(result.getEntry(j,i), result.getEntry(i,k))));
+                if(i!=j) {
+                    for(int k = 0; k<C; k++) {
+                        if(i!=k  && j!=k) {
+                            result.setEntry(j,k, max(result.getEntry(j,k), min(result.getEntry(j,i), result.getEntry(i,k))));
+                        }
+                    }
                 }
             }
         }
         return new PreferenceMatrix<Option, Count>(order, result);
     }
+    
+    
     
     public boolean isWin(int i, int j) {
         return count.getEntry(i,j).compareTo(count.getEntry(j,i))>0;
@@ -156,17 +159,6 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
         int i = getIndex(a);
         int j = getIndex(b);
         return isWin(i,j);
-    }
-    
-    public int getWins(Option option) {
-        var i = getIndex(option);
-        return (int) indexStream().filter(j->isWin(i,j)).count();
-    }
-    
-    public List<Option> sortByMostWins() {
-        var result = new ArrayList<>(order);
-        result.sort((a,b)->getWins(a)-getWins(b));
-        return result;
     }
     
     private static 
@@ -211,5 +203,9 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
             .map(vote->weightedRankedBallotMatrix(options, vote, field))
             .reduce(identity,FieldMatrix::add);
         return new PreferenceMatrix<Option, Count>(options, matrix);
+    }
+    
+    public FieldMatrix<Count> getData() {
+        return count;
     }
 }
