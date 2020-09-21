@@ -1,12 +1,16 @@
 package ca.draconic.vote;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -207,5 +211,31 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
     
     public FieldMatrix<Count> getData() {
         return count;
+    }
+    
+    /**
+     * Assuming there are no cyclical preferences, returns the options ordered by the preference of
+     * this matrix.  Tied options are grouped as a set.
+     * @return
+     */
+    List<Set<Option>> optionsByPreference() {
+        var toSort = new ArrayList<>(order);
+        Comparator<Option> comp = (a,b)->get(a,b).getPreference().comparison;
+        toSort.sort(comp);
+        List<Set<Option>> result = new ArrayList<>(order.size());
+        Set<Option> currentSet = new HashSet<>(order.size());
+        for(Option x : toSort) {
+            if(currentSet.isEmpty() || comp.compare(x, currentSet.iterator().next())==0) {
+                currentSet.add(x);
+            } else {
+                result.add(currentSet);
+                currentSet=new HashSet<>(order.size());
+                currentSet.add(x);
+            }
+        }
+        if(!currentSet.isEmpty()) {
+            result.add(currentSet);
+        }
+        return result;
     }
 }

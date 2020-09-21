@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.math3.fraction.Fraction;
@@ -14,6 +15,7 @@ import org.apache.commons.math3.fraction.FractionField;
 import org.apache.commons.math3.linear.FieldMatrix;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.util.Pair;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -240,5 +242,19 @@ public class PreferenceMatrixTest {
         
         assertEquals(matrix3x3_test2_beatpath, result.getData());
     }
-
+    
+    @Test
+    public void testSortOptions() throws Exception {
+        var options = Arrays.asList("A","B","C","D","E");
+        var unit = new PreferenceMatrix<>(options, matrix3x3_test2_beatpath);
+        
+        var result = unit.optionsByPreference();
+        Assertions.assertIterableEquals(List.of(
+                Set.of("E"),
+                Set.of("A"),
+                Set.of("C"),
+                Set.of("B"),
+                Set.of("D")
+                ), result);
+    }
 }
