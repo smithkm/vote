@@ -32,6 +32,10 @@ public class PreferencePair<Option, Count extends FieldElement<Count> & Comparab
         return optionB;
     }
 
+    public Count getMargin() {
+        return getPreferA().subtract(getPreferB());
+    }
+    
     public Preference getPreference() {
         return Preference.fromVotes(preferA, preferB);
     }

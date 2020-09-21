@@ -29,8 +29,9 @@ public class PreferenceMatrixTest {
     static FieldMatrix<Fraction> matrix3x3_valuesOnDiagonal;
     
     static FieldMatrix<Fraction> matrix3x3_test1;
-    static FieldMatrix<Fraction> matrix3x3_test2;
-    static FieldMatrix<Fraction> matrix3x3_test2_beatpath;
+    static FieldMatrix<Fraction> matrix3x3_test1_margins;
+    static FieldMatrix<Fraction> matrix5x5_test2;
+    static FieldMatrix<Fraction> matrix5x5_test2_beatpath;
     static int[][] array3x3_test1;
     
     @BeforeAll
@@ -50,18 +51,23 @@ public class PreferenceMatrixTest {
             {41, 0, 5},
             {9, 100, 0},
         };
+        matrix3x3_test1_margins = MatrixUtils.createFieldMatrix(new Fraction[][] {
+            {f(0), f(1), f(0)},
+            {f(-1), f(0), f(-95)},
+            {f(0), f(95), f(0)},
+        });
         matrix3x3_valuesOnDiagonal = matrix3x3_test1.copy();
         matrix3x3_valuesOnDiagonal.setEntry(1, 1, Fraction.ONE);
         
         // Examples from the Wikipedia article https://en.wikipedia.org/wiki/Schulze_method
-        matrix3x3_test2 = MatrixUtils.createFieldMatrix(new Fraction[][] {
+        matrix5x5_test2 = MatrixUtils.createFieldMatrix(new Fraction[][] {
             {f(0), f(20), f(26), f(30), f(22)},
             {f(25), f(0), f(16), f(33), f(18)},
             {f(19), f(29), f(0), f(17), f(24)},
             {f(15), f(12), f(28), f(0), f(14)},
             {f(23), f(27), f(21), f(31), f(0)},
         });
-        matrix3x3_test2_beatpath = MatrixUtils.createFieldMatrix(new Fraction[][] {
+        matrix5x5_test2_beatpath = MatrixUtils.createFieldMatrix(new Fraction[][] {
             {f(0), f(28), f(28), f(30), f(24)},
             {f(25), f(0), f(28), f(33), f(24)},
             {f(25), f(29), f(0), f(29), f(24)},
@@ -237,16 +243,16 @@ public class PreferenceMatrixTest {
     @Test
     public void testBeatpath() throws Exception {
         var options = Arrays.asList("A","B","C","D","E");
-        var unit = new PreferenceMatrix<>(options, matrix3x3_test2);
+        var unit = new PreferenceMatrix<>(options, matrix5x5_test2);
         var result = unit.beatPaths();
         
-        assertEquals(matrix3x3_test2_beatpath, result.getData());
+        assertEquals(matrix5x5_test2_beatpath, result.getData());
     }
     
     @Test
     public void testSortOptions() throws Exception {
         var options = Arrays.asList("A","B","C","D","E");
-        var unit = new PreferenceMatrix<>(options, matrix3x3_test2_beatpath);
+        var unit = new PreferenceMatrix<>(options, matrix5x5_test2_beatpath);
         
         var result = unit.optionsByPreference();
         Assertions.assertIterableEquals(List.of(
@@ -257,4 +263,14 @@ public class PreferenceMatrixTest {
                 Set.of("D")
                 ), result);
     }
+    
+    @Test
+    public void testMargins() throws Exception {
+        var options = Arrays.asList("A","B","C");
+        var unit = new PreferenceMatrix<>(options, matrix3x3_test1);
+        var result = unit.margins();
+        
+        assertEquals(matrix3x3_test1_margins, result.getData());
+    }
+
 }

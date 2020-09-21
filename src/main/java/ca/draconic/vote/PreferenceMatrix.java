@@ -218,7 +218,7 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
      * this matrix.  Tied options are grouped as a set.
      * @return
      */
-    List<Set<Option>> optionsByPreference() {
+    public List<Set<Option>> optionsByPreference() {
         var toSort = new ArrayList<>(order);
         Comparator<Option> comp = (a,b)->get(a,b).getPreference().comparison;
         toSort.sort(comp);
@@ -237,5 +237,20 @@ public class PreferenceMatrix<Option, Count extends FieldElement<Count> & Compar
             result.add(currentSet);
         }
         return result;
+    }
+    
+    public PreferenceMatrix<Option, Count> margins() {
+        final int C = order.size(); 
+        var result = count.createMatrix(C, C);
+        
+        for (int i=1; i<C; i++) {
+            for (int j=0; j<i; j++) {
+                Count margin = get(i,j).getMargin();
+                result.setEntry(i, j, margin);
+                result.setEntry(j, i, margin.negate());
+            }
+        }
+        
+        return new PreferenceMatrix<Option, Count>(order, result);
     }
 }
